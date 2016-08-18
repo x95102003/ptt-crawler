@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*-coding:utf-8-*-
 
-from requests import get, HTTPError
+from requests import get, HTTPError, ConnectionError
 from bs4 import BeautifulSoup as bs
 from sys import argv
 from re import search
 from time import sleep
 from threading import Thread
+from flask import Flask, render_template
+app = Flask(__name__)
 
 base = 'https://www.ptt.cc'
 last_pgnum = 3500
@@ -49,14 +51,18 @@ def crawl(board, index=None):
         print "No New board"
     except TypeError as e:
         pass
+    except ConnectionError:
+        pass
 #        print "another error"
     #for k,v in collect_dict.items():
        # print k,v
 
 def show_collect():
-    for tup in sorted(collect_dict.items(), key=lambda x:x[1][0]):
-        key, value = tup
-        print "{0: <50}\t\t{1}\t\t{2}".format(key, value[0], value[1].decode('utf-8'))
+    sort_product = sorted(collect_dict.items(), key=lambda x:x[1][0]) 
+    for tup in sort_product:
+        #key, value = tup
+        print "{0: <50}\t\t{1}\t\t{2}".format(tup[0], tup[1][0], tup[1][1].decode('utf-8'))
+    return sort_product
 #    for k, (p, l) in collect_dict.items():
 #        print "{0: <50}\t{1}\t{2}".format(k, p, l)
 
@@ -78,7 +84,7 @@ def get_price(url):
     m = search(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9])',content.decode('utf-8'))
     if m:
         price = int(m.group(1).replace(',',''))
-        if price < 14000 and price > 2500:
+        if price < 14000 and price > 3500:
             return price
         
 def filter_title(title, url):
@@ -89,6 +95,11 @@ def main():
     th = Thread(target=wait_newPost)
     th.setDaemon(True)
     th.start()
+    mth = Thread(target=monitor)
+    mth.setDaemon(True)
+    mth.start()
+
+def monitor():
     while(True):
         num = raw_input("Input 1 to show collect\n")
         if num == '1':
@@ -97,12 +108,17 @@ def main():
             break
         else:
             pass
-           
 
 def record(title, link, price):
     with open("record.txt", 'a+') as f:
         f.write("{0}\t{1}\t{2}\n".format(title, link, price))
 
+@app.route('/')
+def show_data():
+    return render_template('show.html', collect_data=show_collect())
+
 if __name__ == '__main__':
     main()
+    app.debug=True
+    app.run(host='0.0.0.0', port=8888)
 

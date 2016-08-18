@@ -1,0 +1,8 @@
+<title>Watch collection</title>
+<ul>
+	{% for items in collect_data %}
+	<li style='text-align:center;'><a href="{{ items[1][1] }}">{{ items[0].decode("utf-8")}}</a>
+		<p style='proprty=value; color:red'>Price {{items[1][0]}}</p>
+	</li>
+	  {% endfor %}
+</ul>
