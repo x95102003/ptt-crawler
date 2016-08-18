@@ -43,7 +43,7 @@ def crawl(board, index=None):
             price = filter_title(title, link)
             if price and not title in collect_dict:
                 collect_dict.update({title:[price,link]})
-                record(title, link, price)
+                #record(title, link, price)
                 print title, link, price
     except HTTPError:
         print "No New board"
