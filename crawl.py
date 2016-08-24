@@ -4,7 +4,7 @@
 from requests import get, HTTPError, ConnectionError
 from bs4 import BeautifulSoup as bs
 from sys import argv
-from re import search
+from re import search, findall
 from time import sleep
 from threading import Thread
 from flask import Flask, render_template
@@ -12,8 +12,6 @@ app = Flask(__name__,static_url_path='/static')
 
 ms_th = None
 for_th = None
-#last_pgnum = 3500
-#collect_dict = {}
 
 class PTT_CRAWL(Thread):
    
@@ -45,7 +43,6 @@ class PTT_CRAWL(Thread):
     def crawl_assign(self, pgfrom, pgto):
         self.last_pgnum = pgto+1
         for i in xrange(pgfrom, pgto+1):
-            #print "{0} crawl".format(i)
             self.crawl(i)
 
     def crawl(self, index=None):
@@ -65,9 +62,8 @@ class PTT_CRAWL(Thread):
                 if price and not title in self.collect_dict:
                     self.collect_dict.update({title:[price,link]})
                     #record(title, link, price)
-                    #print title, link, price
-        #except HTTPError:
-        #    print "No New board"
+        except HTTPError:
+            print "No New board"
         except TypeError as e:
             pass
         except ConnectionError:
@@ -78,8 +74,6 @@ class PTT_CRAWL(Thread):
         for tup in sort_product:
             #key, value = tup
             print "{0: <50}\t\t{1}\t\t{2}".format(tup[0], tup[1][0], tup[1][1].decode('utf-8'))
-        #for k, (p, l) in self.collect_dict.items():
-        #    print "{0: <50}\t{1}\t{2}".format(k, p, l)
         return sort_product
 
     def wait_newPost(self):
@@ -99,11 +93,20 @@ class PTT_CRAWL(Thread):
         res = get(url)
         soup = bs(res.text.encode('utf-8'), "html.parser")
         content = soup.select('.bbs-screen')[0].text.encode('utf-8')
-        m = search(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9])',content.decode('utf-8'))
-        if m:
-            price = int(m.group(1).replace(',',''))
-            if price > 3000 and price < 14000:
-                return price
+        #m = search(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9]*)',content.decode('utf-8'))
+        price_list = findall(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9]*)',content.decode('utf-8')) 
+        if price_list:
+            price_list = map(lambda i:int(i.strip('u').encode('utf-8').replace(',','')), price_list)
+            check_price = lambda x:True if x >= 3000 and x <= 14000 else False
+            if len(price_list)>=2 and check_price(price_list[1]):
+                return price_list[1]
+            elif check_price(price_list[0]):
+                return price_list[0]
+#        if m:
+#            print "---%s---%d" %(m.group(), len(m.group()))
+#            price = int(m.group(1).replace(',',''))
+#            if price > 3000 and price < 14000:
+#                return price
             
     def filter_title(self, title, url):
         if 'iphone' in title.lower():
@@ -144,6 +147,6 @@ def show_data():
 
 if __name__ == '__main__':
     main()
-    app.debug=True
+    #app.debug=True
     app.run(host='0.0.0.0', port=8888)
 
