@@ -8,93 +8,116 @@ from re import search
 from time import sleep
 from threading import Thread
 from flask import Flask, render_template
-app = Flask(__name__)
+app = Flask(__name__,static_url_path='/static')
 
-base = 'https://www.ptt.cc'
-last_pgnum = 3500
-collect_dict = {}
+ms_th = None
+for_th = None
+#last_pgnum = 3500
+#collect_dict = {}
 
-def get_lastpage():
-    url = "{0}/bbs/{1}/index.html".format(base, 'forsale') 
-    res = get(url)
-    soup = bs(res.text.encode('utf-8'), "html.parser")
-    last_page = str(soup.select('.btn')[3].get('href'))
-    m = search('.*index([0-9]*).html', last_page)
-    last_pgnum = int(m.group(1))+1
-    return last_pgnum
+class PTT_CRAWL(Thread):
+   
+    def __init__(self, board, last_index):
+        super(PTT_CRAWL, self).__init__()
+        self.base = 'https://www.ptt.cc'
+        self.board = board
+        self.last_pgnum = last_index
+        self.collect_dict = {}
 
-def crawl_assign(pgfrom, pgto):
-    last_pgnum = pgto+1
-    for i in xrange(pgfrom, pgto+1):
-        #print "{0} crawl".format(i)
-        crawl('forsale', i)
+    def run(self):
+        print "Start Crawl the board %s\n" %self.board
+        self.wait_newPost() 
 
-def crawl(board, index=None):
-    sample = 3545
-    if index == None:
-        index=''
-    url = "{0}/bbs/{1}/index{2}.html".format(base, board, index)
-    try:
+    def __str__(self):
+        print self.board, self.last_pgnum, self.collect_dict
+        print self.collect_dict
+        return '{0}'.format(self.board)
+
+    def get_lastpage(self):
+        url = "{0}/bbs/{1}/index.html".format(self.base, self.board) 
         res = get(url)
-        res.raise_for_status()
         soup = bs(res.text.encode('utf-8'), "html.parser")
-        for line in soup.select('.r-ent'):
-            title_div = line.select('.title')[0]
-            link = base+title_div.a['href']
-            title = title_div.a.text.encode('utf-8')
-            price = filter_title(title, link)
-            if price and not title in collect_dict:
-                collect_dict.update({title:[price,link]})
-                #record(title, link, price)
-                print title, link, price
-    except HTTPError:
-        print "No New board"
-    except TypeError as e:
-        pass
-    except ConnectionError:
-        pass
-#        print "another error"
-    #for k,v in collect_dict.items():
-       # print k,v
-
-def show_collect():
-    sort_product = sorted(collect_dict.items(), key=lambda x:x[1][0]) 
-    for tup in sort_product:
-        #key, value = tup
-        print "{0: <50}\t\t{1}\t\t{2}".format(tup[0], tup[1][0], tup[1][1].decode('utf-8'))
-    return sort_product
-#    for k, (p, l) in collect_dict.items():
-#        print "{0: <50}\t{1}\t{2}".format(k, p, l)
-
-def wait_newPost():
-    while(True):
-        tmp_pgnum= get_lastpage()
-        if last_pgnum < tmp_pgnum:
-            crawl_assign(last_pgnum, tmp_pgnum)
-            print "New page found"
-        else:
-            print "No new page"
-            crawl('forsale')
-        sleep(120)
-
-def get_price(url):
-    res = get(url)
-    soup = bs(res.text.encode('utf-8'), "html.parser")
-    content = soup.select('.bbs-screen')[0].text.encode('utf-8')
-    m = search(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9])',content.decode('utf-8'))
-    if m:
-        price = int(m.group(1).replace(',',''))
-        if price < 14000 and price > 3500:
-            return price
+        last_page = str(soup.select('.btn')[3].get('href'))
+        m = search('.*index([0-9]*).html', last_page)
+        last_pgnum = int(m.group(1))+1
+        return last_pgnum
         
-def filter_title(title, url):
-    if 'iphone' in title.lower():
-        return get_price(url)
+    def crawl_assign(self, pgfrom, pgto):
+        self.last_pgnum = pgto+1
+        for i in xrange(pgfrom, pgto+1):
+            #print "{0} crawl".format(i)
+            self.crawl(i)
+
+    def crawl(self, index=None):
+        if index == None:
+            index=''
+        url = "{0}/bbs/{1}/index{2}.html".format(self.base, self.board, index)
+        try:
+            res = get(url)
+            res.raise_for_status()
+            soup = bs(res.text.encode('utf-8'), "html.parser")
+            for line in soup.select('.r-ent'):
+                title_div = line.select('.title')[0]
+                link = self.base+title_div.a['href']
+                title = title_div.a.text.encode('utf-8')
+                price = self.filter_title(title, link)
+                #print title, link, price
+                if price and not title in self.collect_dict:
+                    self.collect_dict.update({title:[price,link]})
+                    #record(title, link, price)
+                    #print title, link, price
+        #except HTTPError:
+        #    print "No New board"
+        except TypeError as e:
+            pass
+        except ConnectionError:
+            pass
+
+    def show_collect(self):
+        sort_product = sorted(self.collect_dict.items(), key=lambda x:x[1][0]) 
+        for tup in sort_product:
+            #key, value = tup
+            print "{0: <50}\t\t{1}\t\t{2}".format(tup[0], tup[1][0], tup[1][1].decode('utf-8'))
+        #for k, (p, l) in self.collect_dict.items():
+        #    print "{0: <50}\t{1}\t{2}".format(k, p, l)
+        return sort_product
+
+    def wait_newPost(self):
+        while(True):
+            tmp_pgnum= self.get_lastpage()
+            print tmp_pgnum, self.last_pgnum
+            if self.last_pgnum < tmp_pgnum:
+                self.crawl_assign( self.last_pgnum,tmp_pgnum )
+                print "New page found"
+            else:
+                print "No new page"
+                self.crawl()
+            sleep(120)
+            print self.collect_dict
+
+    def get_price(self, url):
+        res = get(url)
+        soup = bs(res.text.encode('utf-8'), "html.parser")
+        content = soup.select('.bbs-screen')[0].text.encode('utf-8')
+        m = search(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9])',content.decode('utf-8'))
+        if m:
+            price = int(m.group(1).replace(',',''))
+            if price > 3000 and price < 14000:
+                return price
+            
+    def filter_title(self, title, url):
+        if 'iphone' in title.lower():
+            return self.get_price(url)
 
 def main():
-    th = Thread(target=wait_newPost)
-    th.setDaemon(True)
-    th.start()
+    global for_th
+    global ms_th
+    for_th = PTT_CRAWL('forsale', 3200)
+    for_th.setDaemon(True)
+    for_th.start()
+    ms_th = PTT_CRAWL('mobilesales', 11358)
+    ms_th.setDaemon(True)
+    ms_th.start()
     mth = Thread(target=monitor)
     mth.setDaemon(True)
     mth.start()
@@ -103,9 +126,10 @@ def monitor():
     while(True):
         num = raw_input("Input 1 to show collect\n")
         if num == '1':
-            show_collect()
-        elif num =='0':
-            break
+            print ms_th.show_collect()
+            #print ms_th
+        elif num =='2':
+            print for_th.show_collect()
         else:
             pass
 
@@ -115,7 +139,8 @@ def record(title, link, price):
 
 @app.route('/')
 def show_data():
-    return render_template('show.html', collect_data=show_collect())
+    return render_template('result.html', mobiles=ms_th.show_collect(), forsales=for_th.show_collect())
+
 
 if __name__ == '__main__':
     main()

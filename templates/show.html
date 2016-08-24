@@ -1,8 +1,33 @@
 <title>Watch collection</title>
-<ul>
+
+<table>
+	<thead>
+		<tr>
+			<th>
+				#
+			</th>
+			<th>
+				Title
+			</th>
+			<th>
+				Price	
+			</th>
+		</tr>
+	</thead>
+	<tbody>
 	{% for items in collect_data %}
-	<li style='text-align:center;'><a href="{{ items[1][1] }}">{{ items[0].decode("utf-8")}}</a>
-		<p style='proprty=value; color:red'>Price {{items[1][0]}}</p>
-	</li>
-	  {% endfor %}
-</ul>
+		<tr>
+			<td>
+				{{ loop.index0 }}	
+			</td>
+			<td>
+				<a href="{{ items[1][1] }}">{{ items[0].decode('utf-8') }}</a>
+			</td>
+			<td>
+				<p style='proprty=value; color:red'>{{ items[1][0] }}</p>
+			</td>
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+</tbody>
