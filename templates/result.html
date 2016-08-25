@@ -19,69 +19,39 @@
 	<div class="row">
 		<div class="col-md-6">
 			<h1>Mobiles</h1>
-			<table class="table">
-				<thead>
-					<tr>
-						<th>
-							#
-						</th>
-						<th>
-							Title
-						</th>
-						<th>
-							Price
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for items in mobiles %}
-					<tr class="active">
-						<td>
-							{{ loop.index0 }}
-						</td>
-						<td>
-							<a href="{{ items[1][1] }}">{{ items[0].decode('utf-8') }}</a>
-						</td>
-						<td>
-							<p style='proprty=value; color:red'>{{ items[1][0] }}</p>
-						</td>
-					</tr>
-				{% endfor %}				
-				</tbody>
-			</table>
+			<div class="panel-group" id="panel-314619">
+				{% for items in mobiles %}
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						 <a class="panel-title" data-toggle="collapse" data-parent="#panel-314619" href="#panel-element-{{ loop.index0}}">{{ items[0].decode('utf-8')}} </a>
+					<p style='color:red'>{{ items[1][0]}} </p>
+					</div>
+					<div id="panel-element-{{ loop.index0 }}" class="panel-collapse collapse">
+						<div class="panel-body">
+							{{items[1][2].decode('utf-8')}}
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+			</div>
 		</div>
 		<div class="col-md-6">
-			<h1>Forsale</h1>
-			<table class="table">
-				<thead>
-					<tr>
-						<th>
-							#
-						</th>
-						<th>
-							Title
-						</th>
-						<th>
-							Price
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for item in forsales %}
-					<tr class="active">
-						<td>
-							{{ loop.index0 }}
-						</td>
-						<td>
-							<a href="{{ item[1][1] }}">{{ item[0].decode('utf-8') }}</a>
-						</td>
-						<td>
-							<p style='proprty=value; color:red'>{{ item[1][0] }}</p>
-						</td>
-					</tr>
-				{% endfor %}				
-				</tbody>
-			</table>
+			<h1>Forsale	</h1>
+			<div class="panel-group" id="panel-314620">
+				{% for item in forsales %}
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						 <a class="panel-title" data-toggle="collapse" data-parent="#panel-314620" href="#panel-forsales-{{ loop.index0}}">{{ item[0].decode('utf-8')}} </a> &nbsp<p style='color:red'>{{ item[1][0] }}</p>
+					</div>
+					<div id="panel-forsales-{{ loop.index0 }}" class="panel-collapse collapse">
+						<div class="panel-body">
+							{{item[1][2].decode('utf-8')}}
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+			</div>
+		</div>
 	</div>
 </div>
 

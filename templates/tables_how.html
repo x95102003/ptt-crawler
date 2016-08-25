@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Watch the collect IPhone data!</title>
+
+    <meta name="author" content="Sue-Yi-fan">
+
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+
+  </head>
+  <body>
+
+    <div class="container-fluid">
+	<div class="row">
+		<div class="col-md-6">
+			<h1>Mobiles</h1>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>
+							#
+						</th>
+						<th>
+							Title
+						</th>
+						<th>
+							Price
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for items in mobiles %}
+					<tr class="active">
+						<td>
+							{{ loop.index0 }}
+						</td>
+						<td>
+							<a href="{{ items[1][1] }}">{{ items[0].decode('utf-8') }}</a>
+						</td>
+						<td>
+							<p style='proprty=value; color:red'>{{ items[1][0] }}</p>
+						</td>
+					</tr>
+				{% endfor %}				
+				</tbody>
+			</table>
+		</div>
+		<div class="col-md-6">
+			<h1>Forsale</h1>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>
+							#
+						</th>
+						<th>
+							Title
+						</th>
+						<th>
+							Price
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for item in forsales %}
+					<tr class="active">
+						<td>
+							{{ loop.index0 }}
+						</td>
+						<td>
+							<a href="{{ item[1][1] }}">{{ item[0].decode('utf-8') }}</a>
+						</td>
+						<td>
+							<p style='proprty=value; color:red'>{{ item[1][0] }}</p>
+						</td>
+					</tr>
+				{% endfor %}				
+				</tbody>
+			</table>
+	</div>
+</div>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/scripts.js"></script>
+  </body>
+</html>
