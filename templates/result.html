@@ -28,7 +28,9 @@
 					</div>
 					<div id="panel-element-{{ loop.index0 }}" class="panel-collapse collapse">
 						<div class="panel-body">
-							{{items[1][2].decode('utf-8')}}
+							{% for mline in items[1][2] %}
+							<p>{{mline.decode('utf-8')}}</p>
+							{% endfor %}
 						</div>
 					</div>
 				</div>
@@ -45,7 +47,9 @@
 					</div>
 					<div id="panel-forsales-{{ loop.index0 }}" class="panel-collapse collapse">
 						<div class="panel-body">
-							{{item[1][2].decode('utf-8')}}
+							{% for fline in item[1][2] %}
+							<p>{{fline.decode('utf-8')}}</p>
+							{% endfor %}
 						</div>
 					</div>
 				</div>

@@ -90,20 +90,22 @@ class PTT_CRAWL(Thread):
         res = get(url)
         soup = bs(res.text.encode('utf-8'), "html.parser")
         content = soup.select('.bbs-screen')[0].text.encode('utf-8')
+        cont = str(content)
+        tot_con = [x.strip() for x in cont.split('\n')]
         price_list = findall(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9]*)',content.decode('utf-8')) 
         if price_list:
             price_list = map(lambda i:int(i.strip('u').encode('utf-8').replace(',','')), price_list)
             check_price = lambda x:True if x >= 4200 and x <= 14000 else False
             if len(price_list)>=2 and check_price(price_list[1]):
-                return [price_list[1], content]
+                return [price_list[1], tot_con]
             elif check_price(price_list[0]):
-                return [price_list[0], content]
+                return [price_list[0], tot_con]
             else:
                 return None
     def filter_title(self, title, url):
         #print title
         if 'iphone' in title.lower() and '徵' not in title \
-            and '售出' not in title:
+            and '售' not in title:
             return self.get_price(url)
 
 def main():
@@ -114,6 +116,7 @@ def main():
     for_th.start()
     ms_th = PTT_CRAWL('mobilesales', 11320)
     ms_th.setDaemon(True)
+    #ms_th.get_price('https://www.ptt.cc/bbs/mobilesales/M.1472127453.A.164.html')
     ms_th.start()
     mth = Thread(target=monitor)
     mth.setDaemon(True)
