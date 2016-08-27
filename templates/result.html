@@ -58,15 +58,15 @@
 			</div>
 			<h1>TOP 5</h1>
 			<div class="panel-group" id="panel-314620">
-				{% for ele in top_list %}
+				{% for ind, ele in top_list.items() %}
 				<div class="panel panel-default">
 					<div class="panel-heading">
-						<a class="panel-title" data-toggle="collapse" data-parent="#panel-314620" href="#panel-TOP5-{{loop.index0}}">{{ ele[1][0].decode('utf-8')}} </a> &nbsp
-						<a href="{{ele[1][2]}}" style='color:red'>{{ ele[1][1] }}</a>
+						<a class="panel-title" data-toggle="collapse" data-parent="#panel-314620" href="#panel-TOP5-{{loop.index0}}">{{ ele[0].decode('utf-8')}} </a> &nbsp
+						<a href="{{ele[2]}}" style='color:red'>{{ ele[1] }}</a>
 					</div>
 					<div id="panel-TOP5-{{ loop.index0 }}" class="panel-collapse collapse">
 						<div class="panel-body">
-							{% for lin in ele[1][3] %}
+							{% for lin in ele[3] %}
 							<p>{{lin.decode('utf-8')}}</p>
 							{% endfor %}
 						</div>

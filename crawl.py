@@ -92,16 +92,16 @@ class PTT_CRAWL(Thread):
         res = get(url)
         soup = bs(res.text.encode('utf-8'), "html.parser")
         content = soup.select('.bbs-screen')[0].text.encode('utf-8')
-        cont = str(content)
-        tot_con = [x.strip() for x in cont.split('\n')]
+        contn_list = [x.strip() for x in str(content).split('\n')]
+        ### The unicode is '價格' 
         price_list = findall(u'\u50f9\u683c[^0-9]*([0-9]*,?[0-9]*)',content.decode('utf-8')) 
         if price_list:
             price_list = map(lambda i:int(i.strip('u').encode('utf-8').replace(',','')), price_list)
             check_price = lambda x:True if x >= 4200 and x <= 14000 else False
             if len(price_list)>=2 and check_price(price_list[1]):
-                return [price_list[1], tot_con]
+                return [price_list[1], contn_list]
             elif check_price(price_list[0]):
-                return [price_list[0], tot_con]
+                return [price_list[0], contn_list]
             else:
                 return None
 
@@ -120,7 +120,3 @@ class PTT_CRAWL(Thread):
         for tup in sort_product:
             print "{0: <50}\t\t{1}\t\t{2}".format(tup[1][0], tup[1][1], tup[1][2].decode('utf-8'))
         return sort_product
-
-    def get_new_list(self):
-        post = sorted(self.new_post.items(), key=lambda x:x[0], reverse=True)
-        return post
