@@ -7,9 +7,6 @@ from sys import argv
 from re import search, findall
 from time import sleep
 from threading import Thread
-from flask import Flask, render_template
-app = Flask(__name__,static_url_path='/static')
-
 ms_th = None
 for_th = None
 
@@ -21,16 +18,22 @@ class PTT_CRAWL(Thread):
         self.board = board
         self.last_pgnum = last_index
         self.collect_dict = {}
+        self.include_list = []
+        self.exclude_list = []
 
     def run(self):
         print "Start Crawl the board %s\n" %self.board
-        self.wait_newPost() 
+        self.crawl_timing() 
 
     def __str__(self):
         print self.board, self.last_pgnum, self.collect_dict
         print self.collect_dict
         return '{0}'.format(self.board)
 
+    def set_filter_content(self, include_list, exclude_list):
+        self.include_list = include_list
+        self.exclude_list = exclude_list
+        
     def get_lastpage(self):
         url = "{0}/bbs/{1}/index.html".format(self.base, self.board) 
         res = get(url)
@@ -39,8 +42,8 @@ class PTT_CRAWL(Thread):
         m = search('.*index([0-9]*).html', last_page)
         last_num = int(m.group(1))+1
         return last_num
-        
-    def crawl_assign(self, pgfrom, pgto):
+
+    def crawl_range(self, pgfrom, pgto):
         self.last_pgnum = pgto+2
         for i in xrange(pgfrom, pgto+2):
             print "Page num:%d" %i
@@ -73,20 +76,18 @@ class PTT_CRAWL(Thread):
             print "{0: <50}\t\t{1}\t\t{2}".format(tup[0], tup[1][0], tup[1][1].decode('utf-8'))
         return sort_product
 
-    def wait_newPost(self):
+    def crawl_timing(self):
         while(True):
-            tmp_pgnum= self.get_lastpage()
-            print tmp_pgnum, self.last_pgnum
-            if self.last_pgnum < tmp_pgnum:
-                self.crawl_assign( self.last_pgnum,tmp_pgnum)
+            new_pgnum= self.get_lastpage()
+            if self.last_pgnum < new_pgnum:
+                self.crawl_range( self.last_pgnum,new_pgnum)
                 print "New page found"
             else:
                 print "No new page"
                 self.crawl()
             sleep(120)
-           # print self.collect_dict
 
-    def get_price(self, url):
+    def get_content(self, url):
         res = get(url)
         soup = bs(res.text.encode('utf-8'), "html.parser")
         content = soup.select('.bbs-screen')[0].text.encode('utf-8')
@@ -102,48 +103,14 @@ class PTT_CRAWL(Thread):
                 return [price_list[0], tot_con]
             else:
                 return None
+
     def filter_title(self, title, url):
-        #print title
-        if 'iphone' in title.lower() and '徵' not in title \
-            and '售' not in title:
-            return self.get_price(url)
+        low_title = title.lower()
+        if self.include_list == None:
+            print "You need to set filter_list by used Class.set_filter_content"
+            return self.get_content(url)
 
-def main():
-    global for_th
-    global ms_th
-    for_th = PTT_CRAWL('forsale', 3500)
-    for_th.setDaemon(True)
-    for_th.start()
-    ms_th = PTT_CRAWL('mobilesales', 11320)
-    ms_th.setDaemon(True)
-    #ms_th.get_price('https://www.ptt.cc/bbs/mobilesales/M.1472127453.A.164.html')
-    ms_th.start()
-    mth = Thread(target=monitor)
-    mth.setDaemon(True)
-    mth.start()
-
-def monitor():
-    while(True):
-        num = raw_input("Input 1 to show collect\n")
-        if num == '1':
-            ms_th.show_collect()
-            #print ms_th
-        elif num =='2':
-            for_th.show_collect()
-        else:
-            pass
-
-def record(title, link, price):
-    with open("record.txt", 'a+') as f:
-        f.write("{0}\t{1}\t{2}\n".format(title, link, price))
-
-@app.route('/')
-def show_data():
-    return render_template('result.html', mobiles=ms_th.show_collect(), forsales=for_th.show_collect())
-
-
-if __name__ == '__main__':
-    main()
-    app.debug=True
-    app.run(host='0.0.0.0', port=8888)
+        if filter(lambda x:x in low_title, self.include_list) \
+                and not filter(lambda x:x.lower() in low_title, self.exclude_list):
+            return self.get_content(url)
 
