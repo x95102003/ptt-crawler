@@ -14,10 +14,12 @@ class PTT_CRAWL(Thread):
    
     def __init__(self, board, last_index):
         super(PTT_CRAWL, self).__init__()
+        self.count = 0
         self.base = 'https://www.ptt.cc'
         self.board = board
         self.last_pgnum = last_index
         self.collect_dict = {}
+        self.new_post = {}
         self.include_list = []
         self.exclude_list = []
 
@@ -63,18 +65,17 @@ class PTT_CRAWL(Thread):
                     title = title_div.a.text.encode('utf-8')
                     content= self.filter_title(title, link)
                     if content and not title in self.collect_dict:
-                        self.collect_dict.update({title:[content[0],link, content[1]]})
-                    #record(title, link, price)
+                        self.collect_dict.update({self.count:[title,\
+                                content[0],link, content[1]]})
+                        tmp = self.count % 5
+                        self.new_post.update({tmp:[title,\
+                            content[0], link, content[1]]})
+                        self.count += 1
         except HTTPError:
             print "No New board"
         except ConnectionError:
+            print "ConnectionError"
             pass
-
-    def show_collect(self):
-        sort_product = sorted(self.collect_dict.items(), key=lambda x:x[1][0]) 
-        for tup in sort_product:
-            print "{0: <50}\t\t{1}\t\t{2}".format(tup[0], tup[1][0], tup[1][1].decode('utf-8'))
-        return sort_product
 
     def crawl_timing(self):
         while(True):
@@ -114,3 +115,12 @@ class PTT_CRAWL(Thread):
                 and not filter(lambda x:x.lower() in low_title, self.exclude_list):
             return self.get_content(url)
 
+    def show_collect(self):
+        sort_product = sorted(self.collect_dict.items(), key=lambda x:x[1][1]) 
+        for tup in sort_product:
+            print "{0: <50}\t\t{1}\t\t{2}".format(tup[1][0], tup[1][1], tup[1][2].decode('utf-8'))
+        return sort_product
+
+    def get_new_list(self):
+        post = sorted(self.new_post.items(), key=lambda x:x[0], reverse=True)
+        return post

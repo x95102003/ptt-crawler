@@ -36,7 +36,7 @@ def main():
 
 @app.route('/')
 def show_data():
-    return render_template('result.html', mobiles=ms_th.show_collect(), forsales=for_th.show_collect())
+    return render_template('result.html', mobiles=ms_th.show_collect(), forsales=for_th.show_collect(), top_list=ms_th.get_new_list() )
 
 if __name__ == '__main__':
     main()
