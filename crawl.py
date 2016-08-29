@@ -64,7 +64,8 @@ class PTT_CRAWL(Thread):
                     link = self.base+title_div.a['href']
                     title = title_div.a.text.encode('utf-8')
                     content= self.filter_title(title, link)
-                    if content and not title in self.collect_dict:
+                    if content and not filter(lambda x: \
+                            title in x,self.collect_dict.values()):
                         self.collect_dict.update({self.count:[title,\
                                 content[0],link, content[1]]})
                         tmp = self.count % 5

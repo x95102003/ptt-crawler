@@ -22,7 +22,7 @@ def monitor():
 def main():
     global for_th
     global ms_th
-    for_th = PTT_CRAWL('forsale', 3500)
+    for_th = PTT_CRAWL('forsale', 3426)
     for_th.set_filter_content(['iphone'], ['徵','售'])
     for_th.setDaemon(True)
     for_th.start()
